@@ -1,0 +1,218 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetScanner - Escáner de Red</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-body: #0a0e17;
+            --bg-sidebar: #0e1420;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-card-solid: rgba(14, 20, 32, 0.95);
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+            --border-color: rgba(255, 255, 255, 0.05);
+            --glass-blur: blur(12px);
+            --sidebar-active: rgba(34, 197, 94, 0.1);
+            --primary-gradient: linear-gradient(to br, #22c55e, #0891b2);
+        }
+
+        [data-theme="light"] {
+            --bg-body: #f3f4f6;
+            --bg-sidebar: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.8);
+            --bg-card-solid: rgba(255, 255, 255, 0.98);
+            --text-main: #111827;
+            --text-muted: #1f2937; /* Mucho más oscuro para contraste */
+            --border-color: rgba(0, 0, 0, 0.15); /* Más visible */
+            --glass-blur: blur(12px);
+            --sidebar-active: rgba(34, 197, 94, 0.1);
+        }
+
+        * {
+            transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, backdrop-filter 0.5s ease, box-shadow 0.5s ease !important;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+        }
+
+        aside {
+            background-color: var(--bg-sidebar) !important;
+            border-right-color: var(--border-color) !important;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: var(--text-muted);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+        }
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            transform: translateX(4px);
+        }
+        [data-theme="light"] .sidebar-link:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .sidebar-link.active {
+            background: var(--sidebar-active);
+            color: #22c55e;
+            font-weight: 600;
+        }
+        
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--border-color);
+            transition: all 0.4s ease;
+        }
+        .glass-card:hover {
+            border-color: rgba(34, 197, 94, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.2);
+        }
+
+        .text-white { color: var(--text-main) !important; }
+        .text-gray-400, .text-gray-300 { color: var(--text-muted) !important; }
+        .text-gray-500 { color: var(--text-muted) !important; opacity: 0.8; }
+        .border-white\/5, .border-white\/10 { border-color: var(--border-color) !important; }
+        
+        /* Ajustes específicos para NetScanner texto */
+        .bg-clip-text { transition: all 0.5s ease; }
+        [data-theme="light"] .from-white { --tw-gradient-from: #111827 !important; }
+        [data-theme="light"] .to-gray-400 { --tw-gradient-to: #4b5563 !important; }
+
+        button, .btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        button:hover:not(:disabled) {
+            transform: scale(1.05);
+            filter: brightness(1.1);
+        }
+        
+        main {
+            animation: fadeIn 0.6s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="min-h-screen flex font-sans">
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-0 left-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+    </div>
+
+    <aside class="w-72 bg-[#0e1420] border-r border-white/5 flex flex-col z-10 relative">
+        <div class="p-6 border-b border-white/5">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-green-500/20">
+                    <i class="fa-solid fa-radar text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">NetScanner</h1>
+                    <p class="text-xs text-gray-500">Escáner de Red</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <div class="mb-6">
+                <p class="text-xs text-gray-500 uppercase tracking-wider mb-3 px-3">Menú</p>
+                <a href="{% url 'index' %}" class="sidebar-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}">
+                    <i class="fa-solid fa-network-wired"></i>
+                    Topología Activa
+                </a>
+            </div>
+
+            <div class="mb-6">
+                <p class="text-xs text-gray-500 uppercase tracking-wider mb-3 px-3">Escaneo</p>
+                <a href="{% url 'inventario' %}" class="sidebar-link {% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">
+                    <i class="fa-solid fa-list-check"></i>
+                    Inventario
+                </a>
+                <a href="{% url 'query' %}" class="sidebar-link {% if request.resolver_match.url_name == 'query' %}active{% endif %}">
+                    <i class="fa-solid fa-search"></i>
+                    Consulta Personalizada
+                </a>
+                <a href="{% url 'dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    Historial de Red
+                </a>
+                <a href="{% url 'alertas' %}" class="sidebar-link {% if request.resolver_match.url_name == 'alertas' %}active{% endif %}">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    Alertas
+                </a>
+            </div>
+        </nav>
+
+        <div class="p-4 border-t border-white/5 space-y-3">
+            <a href="{% url 'logout' %}" class="sidebar-link text-red-400 hover:text-red-300">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                Cerrar Sesión
+            </a>
+        </div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto p-8 z-10 relative">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Botón de cambio de tema -->
+    <button id="themeToggle" class="fixed bottom-8 right-8 w-14 h-14 rounded-full bg-gradient-to-br from-green-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-green-500/20 z-50 hover:scale-110 transition-transform">
+        <i id="themeIcon" class="fa-solid fa-sun text-2xl"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{% static 'js/dashboard.js' %}"></script>
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const html = document.documentElement;
+
+        // Cargar tema guardado
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        html.setAttribute('data-theme', savedTheme);
+        updateIcon(savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateIcon(newTheme);
+
+            // Disparar evento personalizado para actualizar componentes que dependen del tema
+            window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: newTheme } }));
+        });
+
+        function updateIcon(theme) {
+            if (theme === 'dark') {
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+            } else {
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+            }
+        }
+    </script>
+</body>
+</html>

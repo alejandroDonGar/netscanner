@@ -1,0 +1,386 @@
+{% extends 'panel/base.html' %}
+
+{% block content %}
+<style>
+    /* Estilos para niveles de riesgo */
+    .riesgo-alto {
+        color: #ef4444;
+        font-weight: bold;
+    }
+
+    /* red-500 */
+    .riesgo-medio {
+        color: #f59e0b;
+        font-weight: bold;
+    }
+
+    /* amber-500 */
+    .riesgo-bajo {
+        color: #10b981;
+        font-weight: bold;
+    }
+
+    /* green-500 */
+    .d-none {
+        display: none !important;
+    }
+
+    .chart-container {
+        height: 200px;
+        display: flex;
+        align-items: flex-end;
+        gap: 20px;
+        padding: 35px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+    }
+
+    .chart-bar {
+        flex: 1;
+        background: linear-gradient(to top, #22c55e, #06b6d4);
+        border-radius: 15px;
+        position: relative;
+        transition: height 0.5s ease;
+        min-height: 8px;
+    }
+
+    .chart-label {
+        position: absolute;
+        bottom: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 10px;
+        color: #9ca3af;
+        white-space: nowrap;
+    }
+
+    .chart-value {
+        position: absolute;
+        top: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 10px;
+        font-weight: bold;
+    }
+</style>
+
+
+
+
+<div class="flex items-center justify-between mb-8">
+    <div>
+        <h2 class="text-3xl font-bold mb-2">Dashboard de Dispositivos</h2>
+        <p class="text-gray-400 text-sm">Resultados del escaneo de red</p>
+    </div>
+    <div class="flex items-center gap-4" id="scan-actions-container">
+        <a href="{% url 'export_pdf_documentacion' %}" class="glass-card rounded-xl px-4 py-3 flex items-center gap-3 hover:bg-white/10 transition-all text-xs border-cyan-500/30">
+            <i class="fa-solid fa-book text-cyan-400"></i> Documentación PDF
+        </a>
+        <a href="{% url 'export_pdf' %}" class="glass-card rounded-xl px-4 py-3 flex items-center gap-3 hover:bg-white/10 transition-all text-xs">
+            <i class="fa-solid fa-file-pdf text-red-500"></i> PDF
+        </a>
+        <a href="{% url 'export_csv' %}" class="glass-card rounded-xl px-4 py-3 flex items-center gap-3 hover:bg-white/10 transition-all text-xs">
+            <i class="fa-solid fa-file-csv text-green-500"></i> CSV
+        </a>
+        <a href="{% url 'export_json' %}"
+            class="glass-card rounded-xl px-4 py-3 flex items-center gap-3 hover:bg-white/10 transition-all text-xs">
+            <i class="fa-solid fa-file-code text-blue-500"></i> JSON
+        </a>
+        <a href="{% url 'export_excel' %}"
+            class="glass-card rounded-xl px-4 py-3 flex items-center gap-3 hover:bg-white/10 transition-all text-xs">
+            <i class="fa-solid fa-file-excel text-green-600"></i> Excel
+        </a>
+        <button type="button" id="scanBtn"
+            class="bg-gradient-to-r from-green-500 to-cyan-600 px-6 py-2 rounded-lg font-semibold hover:shadow-lg hover:shadow-green-500/30 transition-all text-xs flex items-center gap-2">
+            <i class="fa-solid fa-search" id="scanIcon"></i> <span id="scanText">Escanear</span>
+        </button>
+    </div>
+</div>
+
+<!-- Barra de Progreso -->
+<div id="progressContainer" class="mt-12 mb-12 d-none animate-fadeIn">
+    <div class="flex justify-between items-center mb-4">
+        <div class="flex flex-col">
+            <span id="progressStatus" class="text-sm font-medium text-cyan-400 uppercase tracking-widest">Iniciando observación...</span>
+            <span id="scanTimer" class="text-[10px] text-gray-500 mt-1 font-mono">Tiempo: 00:00 | Restante: --:--</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <span id="progressPercent" class="text-2xl font-bold text-white">0%</span>
+        </div>
+    </div>
+    <div class="h-3 w-full bg-white/5 rounded-full overflow-hidden border border-white/10 p-[2px]">
+        <div id="progressBar" class="h-full bg-gradient-to-r from-cyan-500 to-green-500 rounded-full transition-all duration-500 shadow-[0_0_15px_rgba(6,182,212,0.5)]" style="width: 0%"></div>
+    </div>
+</div>
+
+<!-- Estadísticas (Gráficas) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" id="stats-container">
+    <div class="glass-card rounded-2xl p-6">
+        <h4 class="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wider">Escaneos (Últimos 3 días)</h4>
+        <div class="chart-container" id="chart-escaneos">
+            <!-- Bars will be injected here -->
+        </div>
+    </div>
+    <div class="glass-card rounded-2xl p-6">
+        <h4 class="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wider">Niveles de Riesgo</h4>
+        <div class="chart-container" id="chart-riesgo">
+            <!-- Bars will be injected here -->
+        </div>
+    </div>
+</div>
+
+<div class="glass-card rounded-2xl overflow-hidden">
+    <div class="p-6 border-b border-white/10 flex justify-between items-center">
+        <h3 class="text-xl font-semibold">Resultados del Historial</h3>
+        <div id="pagination-info" class="text-sm text-gray-400"></div>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-white/5 text-gray-400 uppercase text-xs">
+                <tr>
+                    <th class="p-4 text-left">IP</th>
+                    <th class="p-4 text-left">MAC</th>
+                    <th class="p-4 text-left">Nombre Disp.</th>
+                    <th class="p-4 text-left">Fabricante</th>
+                    <th class="p-4 text-left">Puertos</th>
+                    <th class="p-4 text-left">Riesgo</th>
+                    <th class="p-4 text-left text-center">Visto</th>
+                    <th class="p-4 text-left">Fecha</th>
+                </tr>
+            </thead>
+            <tbody id="historial-tbody">
+                <!-- Se carga vía JavaScript -->
+            </tbody>
+        </table>
+    </div>
+    <div class="p-4 border-t border-white/10 flex justify-center gap-2" id="pagination-controls"></div>
+</div>
+
+<script>
+    const scanBtn = document.getElementById('scanBtn');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+    const progressPercent = document.getElementById('progressPercent');
+    const progressStatus = document.getElementById('progressStatus');
+    const tableBody = document.getElementById('historial-tbody');
+    const paginationControls = document.getElementById('pagination-controls');
+    const paginationInfo = document.getElementById('pagination-info');
+
+    let allData = [];
+    let currentPage = 1;
+    const recordsPerPage = 15;
+
+    const scanIcon = document.getElementById('scanIcon');
+    const scanText = document.getElementById('scanText');
+    let isScanning = false;
+
+    function formatTime(seconds) {
+        if (!seconds || seconds < 0) return "--:--";
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function setScanState(scanning) {
+        isScanning = scanning;
+        if (scanning) {
+            scanBtn.disabled = true;
+            scanIcon.className = 'fa-solid fa-search fa-spin';
+            scanText.innerText = 'Escaneando...';
+        } else {
+            scanBtn.disabled = false;
+            scanIcon.className = 'fa-solid fa-search';
+            scanText.innerText = 'Escanear';
+        }
+    }
+
+    scanBtn.addEventListener('click', function() {
+        if (isScanning) return;
+
+        progressContainer.classList.remove('d-none');
+        progressStatus.classList.remove('text-red-500');
+        progressStatus.innerText = 'Iniciando observación...';
+        setScanState(true);
+
+        fetch('{% url "scan" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        })
+            .then(response => response.json())
+            .then(data => {
+                updateProgress();
+            });
+    });
+
+    function updateProgress() {
+        fetch('{% url "scan_status" %}')
+            .then(response => response.json())
+            .then(data => {
+                progressBar.style.width = data.percentage + '%';
+                progressPercent.innerText = data.percentage + '%';
+                progressStatus.innerText = data.message;
+                
+                // Actualizar cronómetro
+                scanTimer.innerText = `Tiempo: ${formatTime(data.elapsed_time)} | Restante: ${formatTime(data.estimated_remaining)}`;
+
+                if (data.status === 'running') {
+                    setScanState(true);
+                    setTimeout(updateProgress, 1000);
+                } else if (data.status === 'finished') {
+                    progressStatus.innerText = '¡Completado!';
+                    setScanState(false);
+                    setTimeout(() => {
+                        progressContainer.classList.add('d-none');
+                        progressBar.style.width = '0%';
+                        progressPercent.innerText = '0%';
+
+                        fetchData();
+                        fetchStats();
+                    }, 1500);
+                } else if (data.status === 'error') {
+                    progressStatus.innerText = data.message || 'Error en el escaneo';
+                    progressStatus.classList.add('text-red-500');
+                    setScanState(false);
+                }
+            });
+    }
+    // Al cargar, verificar si ya hay un escaneo
+    updateProgress();
+
+    function formatFecha(fechaStr) {
+        if (!fechaStr || fechaStr === '-') return '-';
+        try {
+            const d = new Date(fechaStr);
+            if (isNaN(d.getTime())) return fechaStr;
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            const hours = String(d.getHours()).padStart(2, '0');
+            const minutes = String(d.getMinutes()).padStart(2, '0');
+            return `${day}-${month}-${year} ${hours}:${minutes}`;
+        } catch (e) { return fechaStr; }
+    }
+
+    function formatPuertos(puertos) {
+        if (!puertos || !Array.isArray(puertos) || puertos.length === 0) return 'Ninguno';
+        // Extraer solo los números de puerto y unirlos por comas
+        const nums = puertos
+            .map(p => p.puerto)
+            .filter(p => p && p !== 'No detectado')
+            .join(', ');
+        return nums || 'Ninguno';
+    }
+
+    function displayData() {
+        tableBody.innerHTML = '';
+        const start = (currentPage - 1) * recordsPerPage;
+        const end = start + recordsPerPage;
+        const paginatedItems = allData.slice(start, end);
+
+        if (paginatedItems.length === 0) {
+            tableBody.innerHTML = '<tr><td class="p-5 text-center text-gray-500" colspan="8">No hay registros.</td></tr>';
+            return;
+        }
+
+        paginatedItems.forEach(item => {
+            let riesgoClass = 'riesgo-desconocido';
+            const riesgo = (item.riesgo || '').toUpperCase();
+            if (riesgo === 'ALTO') riesgoClass = 'riesgo-alto';
+            else if (riesgo === 'MEDIO') riesgoClass = 'riesgo-medio';
+            else if (riesgo === 'BAJO') riesgoClass = 'riesgo-bajo';
+
+            tableBody.innerHTML += `
+                <tr class="table-row border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <td class="p-4 font-medium">${item.ip}</td>
+                    <td class="p-4 font-mono text-xs text-gray-400">${item.mac}</td>
+                    <td class="p-4">${item.nombre_dispositivo || '-'}</td>
+                    <td class="p-4 text-gray-400">${item.fabricante || '-'}</td>
+                    <td class="p-4 text-xs text-cyan-400 font-mono">${formatPuertos(item.puertos)}</td>
+                    <td class="p-4 ${riesgoClass} text-xs">${riesgo || '-'}</td>
+                    <td class="p-4 text-center">${item.veces_visto || '1'}</td>
+                    <td class="p-4 text-xs text-gray-400">${formatFecha(item.fecha)}</td>
+                </tr>
+            `;
+        });
+
+        updatePaginationControls();
+    }
+
+    function updatePaginationControls() {
+        const totalPages = Math.ceil(allData.length / recordsPerPage);
+        paginationControls.innerHTML = '';
+        paginationInfo.innerText = `Pág. ${currentPage}/${totalPages || 1} (${allData.length} reg.)`;
+
+        if (totalPages <= 1) return;
+
+        const prevBtn = document.createElement('button');
+        prevBtn.innerText = '«';
+        prevBtn.className = `px-3 py-1 rounded bg-white/5 hover:bg-white/10 ${currentPage === 1 ? 'opacity-30 cursor-not-allowed' : ''}`;
+        prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; displayData(); } };
+        paginationControls.appendChild(prevBtn);
+
+        const nextBtn = document.createElement('button');
+        nextBtn.innerText = '»';
+        nextBtn.className = `px-3 py-1 rounded bg-white/5 hover:bg-white/10 ${currentPage === totalPages ? 'opacity-30 cursor-not-allowed' : ''}`;
+        nextBtn.onclick = () => { if (currentPage < totalPages) { currentPage++; displayData(); } };
+        paginationControls.appendChild(nextBtn);
+    }
+
+    function fetchStats() {
+        fetch('{% url "get_stats" %}')
+            .then(r => r.json())
+            .then(data => {
+                const cEscaneos = document.getElementById('chart-escaneos');
+                const cRiesgo = document.getElementById('chart-riesgo');
+
+                cEscaneos.innerHTML = '';
+                cRiesgo.innerHTML = '';
+
+                // Gráfica de Escaneos
+                const maxEscaneos = Math.max(...data.escaneos.map(e => e.cantidad), 1);
+                data.escaneos.forEach(e => {
+                    const h = (e.cantidad / maxEscaneos) * 100;
+                    cEscaneos.innerHTML += `
+                        <div class="chart-bar" style="height: ${h}%">
+                            <span class="chart-value">${e.cantidad}</span>
+                            <span class="chart-label">${e.dia}</span>
+                        </div>
+                    `;
+                });
+
+                // Gráfica de Riesgo
+                const maxRiesgo = Math.max(...data.riesgo.map(r => r.cantidad), 1);
+                data.riesgo.forEach(r => {
+                    const h = (r.cantidad / maxRiesgo) * 100;
+                    let color = 'linear-gradient(to top, #10b981, #34d399)'; // Bajo
+                    if (r.nivel === 'ALTO') color = 'linear-gradient(to top, #ef4444, #f87171)';
+                    if (r.nivel === 'MEDIO') color = 'linear-gradient(to top, #f59e0b, #fbbf24)';
+
+                    cRiesgo.innerHTML += `
+                        <div class="chart-bar" style="height: ${h}%; background: ${color}">
+                            <span class="chart-value">${r.cantidad}</span>
+                            <span class="chart-label">${r.nivel}</span>
+                        </div>
+                    `;
+                });
+            });
+    }
+
+    function fetchData() {
+        fetch('{% url "get_devices" %}')
+            .then(response => response.json())
+            .then(data => {
+                allData = data;
+                displayData();
+            });
+    }
+
+    fetchData();
+    fetchStats();
+</script>
+
+{% endblock %}
