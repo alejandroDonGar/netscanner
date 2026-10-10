@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NetScanner · Escáner e inventario de red</title>
+  <meta name="description" content="Aplicación web para descubrir, inventariar y analizar los dispositivos de una red local: topología, riesgo, confianza, historial y alertas.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="NetScanner · Escáner e inventario de red">
+  <meta property="og:description" content="Descubre, inventaría y analiza los dispositivos de tu red local, con riesgo, confianza y alertas.">
+  <meta property="og:image" content="https://alejandrodongar.github.io/netscanner/images/topologia.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,800&family=Manrope:wght@500;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="#"><img src="favicon.svg" alt="">NetScanner</a>
+      <a class="hide-sm" href="#funciones">Funciones</a>
+      <a class="hide-sm" href="#instalar">Instalar</a>
+      <a class="hide-sm" href="https://github.com/alejandroDonGar/Escaner-de-Red-NetScanner#documentación">Documentación</a>
+      <a class="btn primary small" href="https://github.com/alejandroDonGar/Escaner-de-Red-NetScanner">Código</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div>
+        <h1>NetScanner</h1>
+        <p class="lead">Descubre, inventaría y analiza los dispositivos de tu red local: qué hay conectado, qué riesgo tiene cada uno y qué ha cambiado desde el último escaneo.</p>
+        <div class="buttons">
+          <a class="btn primary" href="https://github.com/alejandroDonGar/Escaner-de-Red-NetScanner">Ver el código</a>
+          <a class="btn" href="https://github.com/alejandroDonGar/Escaner-de-Red-NetScanner#documentación">Documentación</a>
+        </div>
+        <p class="hint">Proyecto de equipo de 2º DAM · Apache 2.0. Las capturas usan una red de ejemplo inventada.</p>
+      </div>
+      <img class="shot" src="images/topologia.webp" alt="Topología de red: resumen de dispositivos, tipos, fabricantes y riesgos" width="960" height="521">
+    </section>
+
+    <div id="funciones">
+      <section class="row">
+        <div>
+          <p class="kicker">Descubrimiento</p>
+          <h2>Mira qué hay en tu red</h2>
+          <p>Un escaneo con Scapy detecta los dispositivos activos y los agrupa por categoría en un mapa fácil de leer.</p>
+          <ul>
+            <li><b>Topología activa</b> con solo lo detectado en el último escaneo.</li>
+            <li><b>Clasificación</b> por tipo de dispositivo y fabricante.</li>
+            <li><b>Ficha de cada dispositivo</b> con IP, MAC, puertos abiertos y estado.</li>
+          </ul>
+          <a class="more" href="https://github.com/alejandroDonGar/Escaner-de-Red-NetScanner#topología-activa">Cómo funciona →</a>
+        </div>
+        <img class="shot" src="images/mapa.webp" alt="Mapa de red agrupado por categorías" width="960" height="543" loading="lazy">
+      </section>
+
+      <section class="row flip">
+        <div>
+          <p class="kicker">Seguridad</p>
+          <h2>Sabe qué es de fiar</h2>
+          <p>Cada dispositivo recibe un nivel de riesgo y de confianza, y el sistema te avisa cuando algo cambia.</p>
+          <ul>
+            <li><b>Riesgo</b> alto, medio o bajo según los puertos y servicios expuestos.</li>
+            <li><b>Confianza</b> que crece con las veces que se detecta un dispositivo.</li>
+            <li><b>Alertas</b> de dispositivos nuevos, cambios de IP y fabricantes desconocidos.</li>
+          </ul>
+          <a class="more" href="https://github.com/alejandroDonGar/Escaner-de-Red-NetScanner#sistema-de-alertas">Cómo funciona →</a>
+        </div>
+        <img class="shot" src="images/alertas.webp" alt="Alertas de seguridad" width="960" height="638" loading="lazy">
+      </section>
+
+      <section class="row">
+        <div>
+          <p class="kicker">Memoria</p>
+          <h2>Recuerda lo que pasó</h2>
+          <p>Todos los escaneos quedan guardados en MongoDB Atlas, con inventario, consultas a medida y exportación.</p>
+          <ul>
+            <li><b>Historial</b> con estadísticas, riesgos y fechas de detección.</li>
+            <li><b>Inventario</b> con nombres propios para cada dirección MAC.</li>
+            <li><b>Consulta personalizada</b> y exportación a PDF, CSV, JSON y Excel.</li>
+          </ul>
+          <a class="more" href="https://github.com/alejandroDonGar/Escaner-de-Red-NetScanner#historial-de-red">Cómo funciona →</a>
+        </div>
+        <img class="shot" src="images/historial.webp" alt="Historial de red con gráficas y tabla" width="960" height="712" loading="lazy">
+      </section>
+    </div>
+
+    <section class="closing" id="instalar">
+      <h2>Pruébala</h2>
+      <p class="sub">Hecha con Django, MongoDB Atlas y Scapy. Necesita Python 3.13, Npcap en Windows y una cuenta de MongoDB Atlas.</p>
+      <div class="stack"><span>Django</span><span>MongoDB Atlas</span><span>Scapy</span><span>Python 3.13</span><span>Tailwind CSS</span></div>
+      <ol class="steps">
+        <li><b>Clona</b> el repositorio y crea un entorno virtual con <code>py -3.13 -m venv venv</code>.</li>
+        <li><b>Instala</b> las dependencias con <code>pip install -r requirements.txt</code>.</li>
+        <li>Ejecuta <code>python manage.py migrate</code> y <code>python manage.py runserver</code>, y abre <b>127.0.0.1:8000</b>.</li>
+      </ol>
+      <div class="buttons">
+        <a class="btn primary" href="https://github.com/alejandroDonGar/Escaner-de-Red-NetScanner">Ver el código</a>
+        <a class="btn" href="https://github.com/alejandroDonGar/Escaner-de-Red-NetScanner#instalación">Guía de instalación</a>
+      </div>
+    </section>
+
+    <section class="team">
+      <p class="kicker">Equipo</p>
+      <p>
+        <a href="https://github.com/alejandroDonGar">Alejandro Donate</a> ·
+        <a href="https://github.com/MesaNoche">Alejandro García</a> ·
+        <a href="https://github.com/diego-febles-seoane">Diego Febles</a> ·
+        <a href="https://github.com/Diego-70tech">Diego Rodríguez</a> ·
+        <a href="https://github.com/IbrahimAlvarez30">Ibrahim Álvarez</a> ·
+        <a href="https://github.com/lopezmontanoanthony-ux">Anthony López</a>
+      </p>
+      <p>Basado en el <a href="https://github.com/diego-febles-seoane/Escanear-de-red">repositorio original</a> del equipo.</p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">NetScanner · <a href="https://alejandrodongar.github.io/">← Alejandro Donate</a> · <a href="https://github.com/alejandroDonGar/Escaner-de-Red-NetScanner">GitHub</a> · Licencia <a href="https://github.com/alejandroDonGar/Escaner-de-Red-NetScanner/blob/main/LICENSE">Apache 2.0</a></div>
+  </footer>
+</body>
+</html>
